@@ -6,8 +6,9 @@ const os = require('os');
 
 const CLAUDE_DIR = path.join(os.homedir(), '.claude');
 const SETTINGS_FILE = path.join(CLAUDE_DIR, 'settings.json');
-const STATUSLINE_DEST = path.join(CLAUDE_DIR, 'statusline.sh');
-const STATUSLINE_SRC = path.resolve(__dirname, 'statusline.sh');
+const STATUSLINE_DEST = path.join(CLAUDE_DIR, 'statusline.js');
+const STATUSLINE_SRC = path.resolve(__dirname, 'statusline.js');
+const LEGACY_SCRIPT = path.join(CLAUDE_DIR, 'statusline.sh');
 
 const blue = '\x1b[38;2;0;153;255m';
 const green = '\x1b[38;2;0;175;80m';
@@ -32,29 +33,15 @@ function fail(msg) {
 	console.error(`  ${red}✗${reset} ${msg}`);
 }
 
-function checkDeps() {
+function hasGit() {
 	const { execSync } = require('child_process');
-	const missing = [];
-
-	try {
-		execSync('which jq', { stdio: 'ignore' });
-	} catch {
-		missing.push('jq');
-	}
-
-	try {
-		execSync('which curl', { stdio: 'ignore' });
-	} catch {
-		missing.push('curl');
-	}
 
 	try {
 		execSync('which git', { stdio: 'ignore' });
+		return true;
 	} catch {
-		missing.push('git');
+		return false;
 	}
-
-	return missing;
 }
 
 function uninstall() {
@@ -68,10 +55,10 @@ function uninstall() {
 	if (fs.existsSync(backup)) {
 		fs.copyFileSync(backup, STATUSLINE_DEST);
 		fs.unlinkSync(backup);
-		success(`Restored previous statusline from ${dim}statusline.sh.bak${reset}`);
+		success(`Restored previous statusline from ${dim}statusline.js.bak${reset}`);
 	} else if (fs.existsSync(STATUSLINE_DEST)) {
 		fs.unlinkSync(STATUSLINE_DEST);
-		success(`Removed ${dim}statusline.sh${reset}`);
+		success(`Removed ${dim}statusline.js${reset}`);
 	} else {
 		warn('No statusline found — nothing to remove');
 	}
@@ -108,16 +95,11 @@ function run() {
 	console.log(`  ${dim}─────────────────────${reset}`);
 	console.log();
 
-	const missing = checkDeps();
-	if (missing.length > 0) {
-		fail(`Missing required dependencies: ${missing.join(', ')}`);
-		log(`  Install them and try again.`);
-		if (missing.includes('jq')) {
-			log(`  ${dim}brew install jq${reset}`);
-		}
-		process.exit(1);
+	if (hasGit()) {
+		success('git found');
+	} else {
+		warn('git not found — the branch segment will be hidden');
 	}
-	success('Dependencies found (jq, curl, git)');
 
 	if (!fs.existsSync(CLAUDE_DIR)) {
 		fs.mkdirSync(CLAUDE_DIR, { recursive: true });
@@ -127,7 +109,7 @@ function run() {
 	const backup = STATUSLINE_DEST + '.bak';
 	if (fs.existsSync(STATUSLINE_DEST)) {
 		fs.copyFileSync(STATUSLINE_DEST, backup);
-		warn(`Backed up existing statusline to ${dim}statusline.sh.bak${reset}`);
+		warn(`Backed up existing statusline to ${dim}statusline.js.bak${reset}`);
 	}
 
 	fs.copyFileSync(STATUSLINE_SRC, STATUSLINE_DEST);
@@ -146,7 +128,7 @@ function run() {
 
 	const statusLineConfig = {
 		type: 'command',
-		command: 'bash "$HOME/.claude/statusline.sh"',
+		command: 'node "$HOME/.claude/statusline.js"',
 	};
 
 	if (settings.statusLine && settings.statusLine.type === 'command' && settings.statusLine.command === statusLineConfig.command) {
@@ -155,6 +137,10 @@ function run() {
 		settings.statusLine = statusLineConfig;
 		fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2) + '\n');
 		success(`Updated ${dim}settings.json${reset} with statusLine config`);
+	}
+
+	if (fs.existsSync(LEGACY_SCRIPT)) {
+		warn(`Old ${dim}statusline.sh${reset} is no longer used — delete ${dim}${LEGACY_SCRIPT}${reset} if nothing else needs it`);
 	}
 
 	console.log();

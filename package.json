@@ -1,8 +1,19 @@
 {
-	"name": "@taimi/claude-statusline",
-	"version": "1.0.0",
+	"name": "claude-status-line-skin",
+	"version": "2.0.0",
+	"description": "Status line for Claude Code: model, context, git branch, session time and rate-limit bars",
 	"bin": {
-		"claude-statusline": "./bin/install.js"
+		"claude-status-line-skin": "./bin/install.js"
+	},
+	"files": [
+		"bin"
+	],
+	"engines": {
+		"node": ">=18"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/dnlstpnv/claude-status-line-skin.git"
 	},
 	"license": "MIT",
 	"author": "Taimi QA"
