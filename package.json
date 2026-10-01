@@ -1,0 +1,9 @@
+{
+	"name": "@taimi/claude-statusline",
+	"version": "1.0.0",
+	"bin": {
+		"claude-statusline": "./bin/install.js"
+	},
+	"license": "MIT",
+	"author": "Taimi QA"
+}
