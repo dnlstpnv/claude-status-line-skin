@@ -1,15 +1,15 @@
-# Claude Code Statusline — Local Installation Guide
+# Claude Code Statusline — Installation Guide
 
 ```bash
 brew install jq    # required for JSON parsing
 # curl and git are already installed on macOS
 ```
 
-## Install (from local repo)
+## Install
 
 ```bash
-# From the repo root:
-node .claude/statusline/bin/install.js
+# From the repository root:
+node bin/install.js
 ```
 
 This will:
@@ -42,7 +42,7 @@ Rate limit data requires OAuth login (not API key). Cached for 60 seconds.
 ## Uninstall
 
 ```bash
-node .claude/statusline/bin/install.js --uninstall
+node bin/install.js --uninstall
 ```
 
 ## Manual install (alternative)
@@ -51,7 +51,7 @@ If you prefer not to run the installer:
 
 ```bash
 # 1. Copy the script
-cp .claude/statusline/bin/statusline.sh ~/.claude/statusline.sh
+cp bin/statusline.sh ~/.claude/statusline.sh
 chmod 755 ~/.claude/statusline.sh
 
 # 2. Add to ~/.claude/settings.json (merge with existing settings):
