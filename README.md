@@ -55,8 +55,9 @@ To install from a clone instead, run `node bin/install.js` from the repository r
 - `spend`: spend-limit usage and its reset date, only behind a Claude apps gateway that sets one
 
 All data comes from the JSON Claude Code passes to the status line; the script makes no network calls and
-reads no credentials. Claude Code sends rate limits only to claude.ai Pro and Max subscribers, and only after
-the first API response in a session, so the bars appear after your first message.
+reads no credentials. Claude Code sends rate limits to claude.ai subscribers, but only after the first API
+response in a session. Until then the bars show the last values seen, cached in
+`~/.claude/statusline-rate-limits.json`; a window whose reset time has passed is hidden.
 
 ## Update
 
@@ -69,7 +70,8 @@ npx github:dnlstpnv/claude-status-line-skin --uninstall
 ```
 
 This restores `statusline.js.bak` if one exists (otherwise deletes `~/.claude/statusline.js`) and removes the
-`statusLine` entry from `~/.claude/settings.json`.
+`statusLine` entry from `~/.claude/settings.json`. Delete `~/.claude/statusline-rate-limits.json` by hand if
+you want the cache gone too.
 
 ## Upgrading from 1.x
 
@@ -82,7 +84,7 @@ gone, because Claude Code does not pass extra-usage data to status lines.
 
 | Issue                     | Fix                                                                |
 | ------------------------- | ------------------------------------------------------------------ |
-| No rate-limit bars        | Send a message first; bars need a Pro or Max login, not an API key |
+| No rate-limit bars        | Send a message first; bars need a claude.ai login, not an API key  |
 | `node: command not found` | Install Node.js 18 or later                                        |
 | Status line not showing   | Restart Claude Code after installing                               |
 | No branch shown           | Install `git`, or check that the directory is a git repository     |

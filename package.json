@@ -1,6 +1,6 @@
 {
 	"name": "claude-status-line-skin",
-	"version": "2.0.0",
+	"version": "2.1.0",
 	"description": "Status line for Claude Code: model, context, git branch, session time and rate-limit bars",
 	"bin": {
 		"claude-status-line-skin": "./bin/install.js"

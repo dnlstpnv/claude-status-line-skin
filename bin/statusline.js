@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
@@ -17,6 +18,7 @@ const dim = '\x1b[2m';
 const reset = '\x1b[0m';
 
 const sep = ` ${dim}│${reset} `;
+const RATE_LIMITS_CACHE = path.join(os.homedir(), '.claude', 'statusline-rate-limits.json');
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
 // ── Helpers ─────────────────────────────────────────────
@@ -65,6 +67,21 @@ function git(cwd, args) {
 	}
 }
 
+// Claude Code sends rate_limits only after the first API response in a session, so until then show the last values seen
+function resolveRateLimits(fresh) {
+	if (fresh) {
+		try {
+			fs.writeFileSync(RATE_LIMITS_CACHE, JSON.stringify(fresh));
+		} catch {}
+		return fresh;
+	}
+	try {
+		return JSON.parse(fs.readFileSync(RATE_LIMITS_CACHE, 'utf-8'));
+	} catch {
+		return {};
+	}
+}
+
 function contextPct(contextWindow) {
 	if (typeof contextWindow.used_percentage === 'number') return Math.floor(contextWindow.used_percentage);
 	const usage = contextWindow.current_usage;
@@ -106,16 +123,19 @@ if (typeof durationMs === 'number') {
 line1 += sep;
 line1 += data.thinking?.enabled ? `${magenta}◐ thinking${reset}` : `${dim}◑ thinking${reset}`;
 
-// ── Rate limit lines (Pro/Max subscribers, after the first API response) ──
+// ── Rate limit lines (claude.ai subscribers) ──
+const rateLimits = resolveRateLimits(data.rate_limits);
+const nowSeconds = Date.now() / 1000;
 const rateLines = [];
 const windows = [
-	['current', data.rate_limits?.five_hour, false],
-	['weekly ', data.rate_limits?.seven_day, true],
-	['spend  ', data.rate_limits?.spend_limit, true],
+	['current', rateLimits.five_hour, false],
+	['weekly ', rateLimits.seven_day, true],
+	['spend  ', rateLimits.spend_limit, true],
 ];
 
 for (const [label, window, withDate] of windows) {
 	if (!window || typeof window.used_percentage !== 'number') continue;
+	if (typeof window.resets_at === 'number' && window.resets_at <= nowSeconds) continue;
 	const pct = Math.round(window.used_percentage);
 	const resetAt = formatReset(window.resets_at, withDate);
 	let line = `${white}${label}${reset} ${buildBar(pct, 10)} ${colorForPct(pct)}${String(pct).padStart(3)}%${reset}`;
